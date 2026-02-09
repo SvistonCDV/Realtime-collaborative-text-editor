@@ -1,3 +1,8 @@
+networks:
+  db_network:
+    internal: true
+  app_network:
+
 services:
   postgres:
     image: postgres:15-alpine
@@ -9,8 +14,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5433:5432"
+    networks:
+      - db_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U collab -d collab_editor"]
       interval: 5s
@@ -28,6 +33,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - db_network
+      - app_network
     restart: unless-stopped
 
   frontend:
@@ -37,6 +45,8 @@ services:
       - "3000:80"
     depends_on:
       - backend
+    networks:
+      - app_network
     restart: unless-stopped
 
 volumes:
